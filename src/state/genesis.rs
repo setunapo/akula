@@ -6,6 +6,7 @@ use crate::{
 };
 use anyhow::format_err;
 use tempfile::TempDir;
+use sha3::{Digest, Keccak256};
 
 #[derive(Clone, Debug)]
 pub struct GenesisState {
@@ -73,6 +74,7 @@ where
     if let Some(existing_chainspec) = txn.get(tables::Config, ())? {
         if let Some(chainspec) = chainspec {
             if chainspec != existing_chainspec {
+                println!("chainspec.name: {:?}: {:?}", chainspec.name, existing_chainspec.name);
                 if bundled_chain_spec && chainspec.name == existing_chainspec.name {
                     txn.set(tables::Config, (), chainspec.clone())?;
                     return Ok((chainspec, true));
@@ -94,16 +96,33 @@ where
     // Allocate accounts
     if let Some(balances) = chainspec.balances.get(&genesis) {
         for (&address, &balance) in balances {
+            let mut code_hash = EMPTY_HASH;
+            if let Some(contracts) = chainspec.contracts.get(&genesis) {
+                if contracts.contains_key(&address) {
+                code_hash = match contracts.get(&address) {
+                    Some(contract) =>
+                        {
+                            match contract {
+                                Contract::Contract { code } => H256::from_slice(&Keccak256::digest(&code)[..]),
+                                _ => EMPTY_HASH,
+                            }
+                        },
+                        _ => EMPTY_HASH,
+                };
+            }
+            println!("address{:?}, code_hash:{:?}", address, code_hash);
             state_buffer.update_account(
                 address,
                 None,
                 Some(Account {
                     balance,
+                    code_hash,
                     ..Default::default()
                 }),
             );
         }
     }
+}
 
     state_buffer.write_to_db()?;
 

@@ -155,6 +155,11 @@ pub fn switch_is_active(switch: Option<BlockNumber>, block_number: BlockNumber) 
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SealVerificationParams {
+    Parlia {
+        #[serde(with = "duration_as_millis")]
+        period: Duration,
+        epoch: u64,
+    },
     Clique {
         #[serde(with = "duration_as_millis")]
         period: Duration,
