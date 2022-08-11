@@ -91,7 +91,7 @@ where
     if let Some(existing_chainspec) = txn.get(tables::Config, ())? {
         if let Some(chainspec) = chainspec {
             if chainspec != existing_chainspec {
-                println!("chainspec.name: {:?}: {:?}", chainspec.name, existing_chainspec.name);
+                println!("initialize_genesis chainspec.name: {:?}: {:?}", chainspec.name, existing_chainspec.name);
                 if bundled_chain_spec && chainspec.name == existing_chainspec.name {
                     txn.set(tables::Config, (), chainspec.clone())?;
                     return Ok((chainspec, true));
@@ -128,11 +128,11 @@ where
                     };
                 }
             }
-            println!("address{:?}, code_hash:{:?}", address, code_hash);
+            println!("initialize_genesis address{:?}, code_hash:{:?}", address, code_hash);
             state_buffer.update_account(
                 address,
-        None,
-        Some(Account {
+                None,
+                Some(Account {
                     balance,
                     code_hash,
                     ..Default::default()
@@ -146,7 +146,6 @@ where
     crate::stages::promote_clean_accounts(txn, etl_temp_dir)?;
     crate::stages::promote_clean_storage(txn, etl_temp_dir)?;
     let state_root = crate::trie::regenerate_intermediate_hashes(txn, etl_temp_dir, None)?;
-    println!("state_root:{:?}", state_root);
 
     let header = BlockHeader {
         parent_hash: H256::zero(),
@@ -167,11 +166,9 @@ where
         ommers_hash: EMPTY_LIST_HASH,
         transactions_root: EMPTY_ROOT,
     };
-    println!("extra_data:{:?}", header.extra_data);
-    println!("mix_hash:{:?}", header.mix_hash);
 
     let block_hash = header.hash();
-    println!("block_hash:{:?}", block_hash);
+    println!("initialize_genesis block_hash:{:?}", block_hash);
 
 
     txn.set(tables::Header, (genesis, block_hash), header.clone())?;
