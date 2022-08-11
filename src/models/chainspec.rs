@@ -100,7 +100,10 @@ impl ChainSpec {
             self.upgrades.berlin,
             self.upgrades.london,
             // self.upgrades.paris,
-        ]
+            self.upgrades.mirrorsync,
+            self.upgrades.bruno,
+            self.upgrades.euler,
+            ]
         .iter()
         .copied()
         .flatten()
@@ -303,6 +306,25 @@ pub struct Upgrades {
         with = "::serde_with::rust::unwrap_or_skip"
     )]
     pub paris: Option<BlockNumber>,
+    // bsc forks starts
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        with = "::serde_with::rust::unwrap_or_skip"
+    )]
+    pub mirrorsync: Option<BlockNumber>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        with = "::serde_with::rust::unwrap_or_skip"
+    )]
+    pub bruno: Option<BlockNumber>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        with = "::serde_with::rust::unwrap_or_skip"
+    )]
+    pub euler: Option<BlockNumber>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

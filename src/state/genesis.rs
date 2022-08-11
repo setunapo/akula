@@ -25,8 +25,25 @@ impl GenesisState {
         // Allocate accounts
         if let Some(balances) = self.chain_spec.balances.get(&BlockNumber(0)) {
             for (&address, &balance) in balances {
+                let mut code_hash = EMPTY_HASH;
+                if let Some(contracts) = self.chain_spec.contracts.get(&BlockNumber(0)) {
+                    if contracts.contains_key(&address) {
+                        code_hash = match contracts.get(&address) {
+                            Some(contract) =>
+                                {
+                                    match contract {
+                                        Contract::Contract { code } => H256::from_slice(&Keccak256::digest(&code)[..]),
+                                        _ => EMPTY_HASH,
+                                    }
+                                },
+                            _ => EMPTY_HASH,
+                        };
+                    }
+                }
+                println!("initial_state address{:?}, code_hash:{:?}", address, code_hash);
                 let current_account = Account {
                     balance,
+                    code_hash,
                     ..Default::default()
                 };
                 state_buffer.update_account(address, None, Some(current_account));
@@ -99,22 +116,23 @@ where
             let mut code_hash = EMPTY_HASH;
             if let Some(contracts) = chainspec.contracts.get(&genesis) {
                 if contracts.contains_key(&address) {
-                code_hash = match contracts.get(&address) {
-                    Some(contract) =>
-                        {
-                            match contract {
-                                Contract::Contract { code } => H256::from_slice(&Keccak256::digest(&code)[..]),
-                                _ => EMPTY_HASH,
-                            }
-                        },
-                        _ => EMPTY_HASH,
-                };
+                    code_hash = match contracts.get(&address) {
+                        Some(contract) =>
+                            {
+                                match contract {
+                                    Contract::Contract { code } => H256::from_slice(&Keccak256::digest(&code)[..]),
+                                    _ => EMPTY_HASH,
+                                }
+                            },
+                            _ => EMPTY_HASH,
+                    };
+                }
             }
             println!("address{:?}, code_hash:{:?}", address, code_hash);
             state_buffer.update_account(
                 address,
-                None,
-                Some(Account {
+        None,
+        Some(Account {
                     balance,
                     code_hash,
                     ..Default::default()
@@ -122,7 +140,6 @@ where
             );
         }
     }
-}
 
     state_buffer.write_to_db()?;
 

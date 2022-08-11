@@ -5,7 +5,6 @@
             period: 3,
             epoch: 200,
         ),
-        eip1559_block: 5062605,
     ),
     upgrades: (
         homestead: 0,
@@ -15,6 +14,9 @@
         constantinople: 0,
         petersburg: 0,
         istanbul: 0,
+        mirrorsync: 5184000,
+        bruno: 13082000,
+        euler: 18907621,
     ),
     params: (
         chain_id: 56,
