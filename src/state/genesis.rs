@@ -129,6 +129,7 @@ where
     crate::stages::promote_clean_accounts(txn, etl_temp_dir)?;
     crate::stages::promote_clean_storage(txn, etl_temp_dir)?;
     let state_root = crate::trie::regenerate_intermediate_hashes(txn, etl_temp_dir, None)?;
+    println!("state_root:{:?}", state_root);
 
     let header = BlockHeader {
         parent_hash: H256::zero(),
@@ -149,7 +150,12 @@ where
         ommers_hash: EMPTY_LIST_HASH,
         transactions_root: EMPTY_ROOT,
     };
+    println!("extra_data:{:?}", header.extra_data);
+    println!("mix_hash:{:?}", header.mix_hash);
+
     let block_hash = header.hash();
+    println!("block_hash:{:?}", block_hash);
+
 
     txn.set(tables::Header, (genesis, block_hash), header.clone())?;
     txn.set(tables::CanonicalHeader, genesis, block_hash)?;

@@ -328,6 +328,11 @@ pub enum Seal {
         nonce: H64,
         mix_hash: H256,
     },
+    Parlia {
+        vanity: H256,
+        score: BlockScore,
+        signers: Vec<Address>,
+    },
     Clique {
         vanity: H256,
         score: BlockScore,
@@ -339,6 +344,7 @@ impl Seal {
     pub fn difficulty(&self) -> U256 {
         match self {
             Seal::Ethash { difficulty, .. } => *difficulty,
+            Seal::Parlia { score, .. } => (*score as u8).into(),
             Seal::Clique { score, .. } => (*score as u8).into(),
         }
     }
@@ -346,6 +352,17 @@ impl Seal {
     pub fn extra_data(&self) -> Bytes {
         match self {
             Seal::Ethash { vanity, .. } => vanity.clone(),
+            Seal::Parlia {
+                vanity, signers, ..
+            } => {
+                let mut v = Vec::new();
+                v.extend_from_slice(vanity.as_bytes());
+                for signer in signers {
+                    v.extend_from_slice(signer.as_bytes());
+                }
+                v.extend_from_slice(&[0; 65]);
+                v.into()
+            }
             Seal::Clique {
                 vanity, signers, ..
             } => {

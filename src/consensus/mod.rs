@@ -337,7 +337,7 @@ pub fn engine_factory(
 
         SealVerificationParams::Parlia { period, epoch } => {
             let initial_signers = match chain_config.genesis.seal {
-                Seal::Clique {
+                Seal::Parlia {
                     vanity: _,
                     score: _,
                     signers,
