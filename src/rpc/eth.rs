@@ -170,7 +170,7 @@ where
                         let mut buffer = Buffer::new(&txn, Some(BlockNumber(block_number.0 - 1)));
 
                         let block_execution_spec = chain_spec.collect_block_spec(block_number);
-                        let mut engine = engine_factory(None, chain_spec, None)?;
+                        let mut engine = engine_factory(None, chain_spec.clone(), None)?;
                         let mut analysis_cache = AnalysisCache::default();
                         let mut tracer = NoopTracer;
 
@@ -182,6 +182,7 @@ where
                             &header,
                             &block_body,
                             &block_execution_spec,
+                            &chain_spec,
                         );
 
                         let receipts = processor.execute_block_no_post_validation()?;
@@ -631,7 +632,7 @@ where
                 let mut buffer = Buffer::new(&txn, Some(BlockNumber(block_number.0 - 1)));
 
                 let block_execution_spec = chain_spec.collect_block_spec(block_number);
-                let mut engine = engine_factory(None, chain_spec, None)?;
+                let mut engine = engine_factory(None, chain_spec.clone(), None)?;
                 let mut analysis_cache = AnalysisCache::default();
                 let mut tracer = NoopTracer;
 
@@ -643,6 +644,7 @@ where
                     &header,
                     &block_body,
                     &block_execution_spec,
+                    &chain_spec,
                 );
 
                 let transaction_index = chain::block_body::read_without_senders(&txn, block_number)?.ok_or_else(|| format_err!("where's block body"))?.transactions
