@@ -308,6 +308,7 @@ where
         account_changes: &mut PrefixSet,
         storage_changes: &mut PrefixSet,
     ) -> Result<H256> {
+        info!("calculate_root enter");
         let mut state = self.txn.cursor(tables::HashedAccount)?;
         let mut trie_db_cursor = self.txn.cursor(tables::TrieAccount)?;
 
@@ -317,6 +318,7 @@ where
         let mut last_message_at = Instant::now();
 
         while let Some(key) = trie.key() {
+            info!("calculate_root trie.key:{:?}, can_skip_state:{}", key, trie.can_skip_state);
             if trie.can_skip_state {
                 self.hb.add_branch_node(
                     key,
@@ -327,20 +329,26 @@ where
 
             let seek_key = match trie.first_uncovered_prefix() {
                 Some(mut uncovered) => {
+                    info!("calculate_root first_uncovered_prefix seek_key:{:?}", uncovered);
                     uncovered.resize(32, 0);
                     uncovered
                 }
-                None => break,
+                None => {
+                    info!("calculate_root first_uncovered_prefix None");
+                    break
+                },
             };
 
             trie.next()?;
 
             let mut acc = state.seek(H256::from_slice(seek_key.as_slice()))?;
             let trie_key = trie.key();
+            info!("calculate_root seek_key:{:?}, acc:{:?}, trie_key:{:?}", seek_key, acc, trie_key);
 
             while let Some((address, account)) = acc {
                 let packed_key = address.as_bytes();
                 let unpacked_key = unpack_nibbles(packed_key);
+                info!("calculate_root while loop address:{:?}, account:{:?}, unpacked_key:{:?}", address, account, unpacked_key);
 
                 if let Some(ref key) = trie_key {
                     if key < &unpacked_key {
@@ -350,6 +358,7 @@ where
 
                 let storage_root =
                     self.calculate_storage_root(address.as_bytes(), storage_changes)?;
+                info!("calculate_root calculate_storage_root address:{:?}, storage_changes:{:?}, storage_root:{:?}", address, storage_changes, storage_root);
 
                 self.hb.add_leaf(
                     unpacked_key,
@@ -357,10 +366,11 @@ where
                 );
 
                 acc = state.next()?;
+                info!("calculate_root state.next() acc:{:?}", acc);
 
                 let now = Instant::now();
                 let elapsed = now - last_message_at;
-                if elapsed >= Duration::from_secs(30) {
+                if elapsed >= Duration::from_secs(30) || true{
                     let total_elapsed = now - first_started_at;
 
                     let prefix = (packed_key[0] as u32) * 0x100 + packed_key[1] as u32;

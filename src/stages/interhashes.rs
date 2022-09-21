@@ -68,7 +68,7 @@ where
                 )?
                 .ok_or_else(|| format_err!("No header for block {}", max_block))?
                 .state_root;
-
+            info!("Interhashes::execute, expected root: {:?}", block_state_root);
             let trie_root = if should_do_clean_promotion(
                 tx,
                 genesis,
@@ -76,10 +76,10 @@ where
                 max_block,
                 self.clean_promotion_threshold,
             )? {
-                debug!("Regenerating intermediate hashes");
+                info!("Regenerating intermediate hashes, etl_dir:{:?}", self.temp_dir);
                 regenerate_intermediate_hashes(tx, self.temp_dir.as_ref(), Some(block_state_root))
             } else {
-                debug!("Incrementing intermediate hashes");
+                info!("Incrementing intermediate hashes, etl_dir:{:?}", self.temp_dir);
                 increment_intermediate_hashes(
                     tx,
                     self.temp_dir.as_ref(),

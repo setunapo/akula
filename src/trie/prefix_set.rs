@@ -1,7 +1,7 @@
 use crate::trie::util::has_prefix;
 use bytes::Bytes;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PrefixSet {
     keys: Vec<Bytes>,
     sorted: bool,
