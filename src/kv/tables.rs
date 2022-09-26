@@ -795,7 +795,6 @@ impl TableDecode for CallTraceSetEntry {
         })
     }
 }
-
 decl_table!(Account => Address => crate::models::Account);
 decl_table!(Storage => Address => (H256, U256));
 decl_table!(AccountChangeSet => AccountChangeKey => AccountChange);

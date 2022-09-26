@@ -38,7 +38,6 @@ where
             current_gas
         )
     })?;
-
     Ok(past_progress == genesis || gas_progress > threshold)
 }
 

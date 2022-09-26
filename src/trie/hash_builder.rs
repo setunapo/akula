@@ -10,6 +10,7 @@ use bytes::{BufMut, Bytes, BytesMut};
 use ethereum_types::H256;
 use fastrlp::{Encodable, RlpEncodable, EMPTY_STRING_CODE};
 use std::{boxed::Box, cmp};
+use tracing::info;
 
 const RLP_EMPTY_STRING_CODE: u8 = 0x80;
 
@@ -120,6 +121,7 @@ impl<'nc> HashBuilder<'nc> {
     }
 
     pub fn add_leaf(&mut self, key: Vec<u8>, value: &[u8]) {
+        info!("add_leaf, key:{:?}, value:{:?}",key, value);
         assert!(key > self.key);
         if !self.key.is_empty() {
             self.gen_struct_step(key.as_slice());
@@ -129,6 +131,7 @@ impl<'nc> HashBuilder<'nc> {
     }
 
     pub fn add_branch_node(&mut self, key: Vec<u8>, value: &H256, is_in_db_trie: bool) {
+        info!("add_branch_node, key:{:?}, value:{:?}, is_in_db_trie:{:?}",key, value, is_in_db_trie);
         assert!(key > self.key || (self.key.is_empty() && key.is_empty()));
         if !self.key.is_empty() {
             self.gen_struct_step(key.as_slice());
@@ -142,6 +145,7 @@ impl<'nc> HashBuilder<'nc> {
     }
 
     pub fn compute_root_hash(&mut self) -> H256 {
+        info!("compute_root_hash");
         self.finalize();
         self.get_root_hash()
     }
@@ -169,7 +173,7 @@ impl<'nc> HashBuilder<'nc> {
     fn gen_struct_step(&mut self, succeeding: &[u8]) {
         let mut build_extensions = false;
         let mut current = self.key.clone();
-
+        info!("gen_struct_step, succeeding:{:?}", succeeding);
         loop {
             let preceding_exists = !self.groups.is_empty();
             let preceding_len: usize = self.groups.len().saturating_sub(1);
@@ -177,12 +181,13 @@ impl<'nc> HashBuilder<'nc> {
             let common_prefix_len = prefix_length(succeeding, current.as_slice());
             let len = cmp::max(preceding_len, common_prefix_len);
             assert!(len < current.len());
-
             let extra_digit = current[len];
             if self.groups.len() <= len {
                 self.groups.resize(len + 1, 0u16);
             }
             self.groups[len] |= 1u16 << extra_digit;
+            info!("gen_struct_step, preceding_exists:{:?}, preceding_len:{:?}, common_prefix_len:{:?}, extra_digit:{:?}",
+                   preceding_exists, preceding_len, common_prefix_len, extra_digit);
 
             if self.tree_masks.len() < current.len() {
                 self.tree_masks.resize(current.len(), 0u16);

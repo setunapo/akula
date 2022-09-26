@@ -318,7 +318,7 @@ where
         let mut last_message_at = Instant::now();
 
         while let Some(key) = trie.key() {
-            info!("calculate_root trie.key:{:?}, can_skip_state:{}", key, trie.can_skip_state);
+            info!("calculate_root, TrieAccount trie.key:{:?}, can_skip_state:{}", key, trie.can_skip_state);
             if trie.can_skip_state {
                 self.hb.add_branch_node(
                     key,
@@ -343,12 +343,12 @@ where
 
             let mut acc = state.seek(H256::from_slice(seek_key.as_slice()))?;
             let trie_key = trie.key();
-            info!("calculate_root seek_key:{:?}, acc:{:?}, trie_key:{:?}", seek_key, acc, trie_key);
+            info!("calculate_root seek_key:{:?}, trie_key:{:?}, acc:{:?}", seek_key, trie_key, acc);
 
             while let Some((address, account)) = acc {
                 let packed_key = address.as_bytes();
                 let unpacked_key = unpack_nibbles(packed_key);
-                info!("calculate_root while loop address:{:?}, account:{:?}, unpacked_key:{:?}", address, account, unpacked_key);
+                info!("calculate_root while loop address:{:?}, account:{:?}", address, account);
 
                 if let Some(ref key) = trie_key {
                     if key < &unpacked_key {
@@ -358,7 +358,7 @@ where
 
                 let storage_root =
                     self.calculate_storage_root(address.as_bytes(), storage_changes)?;
-                info!("calculate_root calculate_storage_root address:{:?}, storage_changes:{:?}, storage_root:{:?}", address, storage_changes, storage_root);
+                info!("calculate_root storage_root address:{:?}, storage_changes:{:?}, storage_root:{:?}", address, storage_changes, storage_root);
 
                 self.hb.add_leaf(
                     unpacked_key,
@@ -468,7 +468,7 @@ where
 {
     let mut account_collector = TableCollector::new(etl_dir, OPTIMAL_BUFFER_CAPACITY);
     let mut storage_collector = TableCollector::new(etl_dir, OPTIMAL_BUFFER_CAPACITY);
-
+    info!("do_increment_intermediate_hashes, create account and storage collector, BufferCapacity:{:?}", OPTIMAL_BUFFER_CAPACITY);
     let root = {
         let mut loader = DbTrieLoader::new(txn, &mut account_collector, &mut storage_collector);
         loader.calculate_root(account_changes, storage_changes)?
@@ -564,6 +564,10 @@ where
 {
     let mut account_changes = gather_account_changes(txn, from + 1)?;
     let mut storage_changes = gather_storage_changes(txn, &mut account_changes, from + 1)?;
+    info!("increment_intermediate_hashes, with AccountChangeSet & StorageChangeSet");
+    info!("AccountChangeSet: {:?}", account_changes);
+    info!("StorageChangeSet: {:?}", storage_changes);
+
     do_increment_intermediate_hashes(
         txn,
         etl_dir,
@@ -603,6 +607,7 @@ where
     'db: 'tx,
     E: EnvironmentKind,
 {
+    info!("regenerate_intermediate_hashes, clear TrieAccount & TrieStorage, no PrefixSet of AccountChangeSet & StorageChangeSet");
     txn.clear_table(tables::TrieAccount)?;
     txn.clear_table(tables::TrieStorage)?;
     do_increment_intermediate_hashes(

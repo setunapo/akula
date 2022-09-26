@@ -68,7 +68,9 @@ where
                 )?
                 .ok_or_else(|| format_err!("No header for block {}", max_block))?
                 .state_root;
-            info!("Interhashes::execute, expected root: {:?}", block_state_root);
+            info!("Interhashes, StateRoot: {:?}, genesis: {:?}, past_progress: {:?}, max_block: {:?}, clean_promotion_threshold: {:?}",
+                   block_state_root, genesis, past_progress,
+                   max_block, self.clean_promotion_threshold);
             let trie_root = if should_do_clean_promotion(
                 tx,
                 genesis,
