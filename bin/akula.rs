@@ -241,11 +241,6 @@ fn main() -> anyhow::Result<()> {
                     chainspec.clone(),
                     Some(opt.engine_listen_address),
                 )?;
-                let consens_config_exec = engine_factory(
-                    Some(db.clone()),
-                    chainspec.clone(),
-                    Some(opt.engine_listen_address),
-                )?;
 
                 let consensus: Arc<dyn Consensus> = engine_factory(
                     Some(db.clone()),
@@ -485,8 +480,13 @@ fn main() -> anyhow::Result<()> {
                     },
                     false,
                 );
-                //let consens = consensus.clone().into();
-                staged_sync.push(BodyDownload { node, consensus }, false);
+                staged_sync.push(
+                    BodyDownload {
+                        node: node.clone(),
+                        consensus,
+                    },
+                    false,
+                );
                 staged_sync.push(TotalTxIndex, false);
                 staged_sync.push(
                     SenderRecovery {
@@ -545,6 +545,7 @@ fn main() -> anyhow::Result<()> {
                 );
 
                 if can_mine {
+                    staged_sync.is_mining = true;
                     let config = MiningConfig {
                         enabled: true,
                         ether_base: opt.mine_etherbase.unwrap().clone(),
@@ -617,6 +618,7 @@ fn main() -> anyhow::Result<()> {
                             mining_block: Arc::clone(&mining_block_mutex),
                             mining_config: Arc::clone(&mining_config_mutex),
                             chain_spec: chainspec.clone(),
+                            node: node.clone(),
                         },
                         false,
                     );
