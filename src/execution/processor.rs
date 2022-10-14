@@ -114,11 +114,18 @@ where
         sender,
         U256::from(message.gas_limit()) * effective_gas_price,
     )?;
+    println!(
+        "execute_transaction base_fee_per_gas:{:?}, effective_gas_price:{:?}",
+        base_fee_per_gas, effective_gas_price
+    );
 
     if let TransactionAction::Call(to) = message.action() {
+        println!("execute_transaction Call to:{:?}", to);
         state.access_account(to);
         // EVM itself increments the nonce for contract creation
         state.set_nonce(sender, message.nonce() + 1)?;
+    } else {
+        println!("execute_transaction create");
     }
 
     for entry in &*message.access_list() {
@@ -172,6 +179,11 @@ where
         .priority_fee_per_gas(base_fee_per_gas)
         .ok_or(ValidationError::MaxFeeLessThanBase)?;
     let rewards = U256::from(gas_used) * priority_fee_per_gas;
+    println!(
+        "execute_transaction message.gas_limit():{:?}, gas_used:{:?}, priority_fee_per_gas:{:?}, rewards:{:?}",
+        message.gas_limit(), gas_used, priority_fee_per_gas, rewards
+    );
+
     if rewards > 0 {
         if parlia_engine {
             state.add_to_balance(*SYSTEM_ACCOUNT, rewards)?;
@@ -351,9 +363,11 @@ where
         &mut self,
         mut pred: impl FnMut(usize, &MessageWithSender) -> bool,
     ) -> Result<Vec<Receipt>, DuoError> {
+        println!("execute_block_no_post_validation_while enter");
         let mut receipts = Vec::with_capacity(self.block.transactions.len());
 
         for (&address, &balance) in &self.block_spec.balance_changes {
+            println!("set_balance, address:{:?}, balance:{:?}", address, balance);
             self.state.set_balance(address, balance)?;
         }
 
@@ -368,6 +382,10 @@ where
             if parlia_engine
                 && is_system_transaction(&txn.message, &txn.sender, &self.header.beneficiary)
             {
+                println!(
+                    "is_system_transaction index:{:?}, sender:{:?}, beneficiary:{:?}",
+                    i, txn.sender, self.header.beneficiary
+                );
                 system_txs.push(txn);
                 continue;
             }
@@ -486,6 +504,7 @@ where
     S: State,
 {
     pub fn execute_and_write_block(mut self) -> Result<Vec<Receipt>, DuoError> {
+        println!("execute_and_write_block");
         let receipts = self.execute_and_check_block()?;
 
         self.state.write_to_state(self.header.number)?;

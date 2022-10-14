@@ -137,7 +137,6 @@ where
     crate::stages::promote_clean_accounts(txn, etl_temp_dir)?;
     crate::stages::promote_clean_storage(txn, etl_temp_dir)?;
     let state_root = crate::trie::regenerate_intermediate_hashes(txn, etl_temp_dir, None)?;
-
     let header = BlockHeader {
         parent_hash: H256::zero(),
         beneficiary: chainspec.genesis.author,
@@ -158,7 +157,10 @@ where
         transactions_root: EMPTY_ROOT,
     };
     let block_hash = header.hash();
-    println!("initialize_genesis block_hash:{:?}", block_hash);
+    println!(
+        "initialize_genesis block_hash:{:?}, state_root:{:?}",
+        block_hash, state_root
+    );
 
     txn.set(tables::Header, genesis, header.clone())?;
     txn.set(tables::CanonicalHeader, genesis, block_hash)?;

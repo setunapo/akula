@@ -49,6 +49,7 @@ fn execute_batch_of_blocks<E: EnvironmentKind>(
     starting_block: BlockNumber,
     first_started_at: (Instant, Option<BlockNumber>),
 ) -> Result<BlockNumber, StageError> {
+    println!("execute_batch_of_blocks, batch_size:{:?}", batch_size);
     let mut consensus_engine = engine_factory(None, chain_config.clone(), None)?;
     consensus_engine.set_state(ConsensusState::recover(tx, &chain_config, starting_block)?);
 
@@ -220,6 +221,10 @@ where
         let max_block = std::cmp::min(input
             .previous_stage.ok_or_else(|| format_err!("Execution stage cannot be executed first, but no previous stage progress specified"))?.1, self.max_block.unwrap_or(BlockNumber(u64::MAX)));
 
+        println!(
+            "Execution Stage, starting_block:{:?}, max_block:{:?}",
+            starting_block, max_block
+        );
         Ok(if max_block >= starting_block {
             let result = execute_batch_of_blocks(
                 tx,
