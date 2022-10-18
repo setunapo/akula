@@ -22,13 +22,12 @@ pub fn upgrade_build_in_system_contract<'r, S>(
 where
     S: StateReader + HeaderReader,
 {
-    let emptyConfig: Vec<UpgradeConfig> = vec![];
-
+    let empty_config: Vec<UpgradeConfig> = vec![];
     if config.is_on_ramanujan(block_number) {
         apply_system_contract_upgrade(
             RAMANUJAN_UPGRADE_CONFIG
                 .get(&config.params.chain_id.0)
-                .unwrap_or(&emptyConfig),
+                .unwrap_or(&empty_config),
             statedb,
         )?;
     }
@@ -37,7 +36,7 @@ where
         apply_system_contract_upgrade(
             NIELS_UPGRADE_CONFIG
                 .get(&config.params.chain_id.0)
-                .unwrap_or(&emptyConfig),
+                .unwrap_or(&empty_config),
             statedb,
         )?;
     }
@@ -46,7 +45,7 @@ where
         apply_system_contract_upgrade(
             MIRRORSYNC_UPGRADE_CONFIG
                 .get(&config.params.chain_id.0)
-                .unwrap_or(&emptyConfig),
+                .unwrap_or(&empty_config),
             statedb,
         )?;
     }
@@ -55,7 +54,7 @@ where
         apply_system_contract_upgrade(
             BRUNO_UPGRADE_CONFIG
                 .get(&config.params.chain_id.0)
-                .unwrap_or(&emptyConfig),
+                .unwrap_or(&empty_config),
             statedb,
         )?;
     }
@@ -64,7 +63,7 @@ where
         apply_system_contract_upgrade(
             EULER_UPGRADE_CONFIG
                 .get(&config.params.chain_id.0)
-                .unwrap_or(&emptyConfig),
+                .unwrap_or(&empty_config),
             statedb,
         )?;
     }
@@ -73,7 +72,7 @@ where
         apply_system_contract_upgrade(
             GIBBS_UPGRADE_CONFIG
                 .get(&config.params.chain_id.0)
-                .unwrap_or(&emptyConfig),
+                .unwrap_or(&empty_config),
             statedb,
         )?;
     }
@@ -88,7 +87,7 @@ where
     S: StateReader + HeaderReader,
 {
     for x in upgrade.iter() {
-        info!("apply_system_contract_upgrade {}", x.contract_addr);
+        debug!("apply_system_contract_upgrade {}", x.contract_addr);
         let addr: Address = Address::from_str(x.contract_addr).unwrap();
         statedb.set_code(addr, Bytes::from(x.code.from_hex().unwrap()))?;
     }
